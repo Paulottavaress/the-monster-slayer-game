@@ -20,24 +20,31 @@
       <section id="monster" class="container">
         <h2>Monster Health</h2>
         <div class="healthbar">
-          <div class="healthbar__value"></div>
+          <div class="healthbar__value" :style="{width: monsterHealthBar}"></div>
         </div>
       </section>
       <section id="player" class="container">
         <h2>Your Health</h2>
         <div class="healthbar">
-          <div class="healthbar__value"></div>
+          <div class="healthbar__value" :style="{width: playerHealthBar}"></div>
         </div>
       </section>
-      <section id="controls">
-        <button>ATTACK</button>
-        <button>SPECIAL ATTACK</button>
-        <button>HEAL</button>
-        <button>SURRENDER</button>
+      <section v-if="playerHealth <= 0 || monsterHealth <= 0" class="container">
+        <h2>Game Over!</h2>
+        <h3>{{ gameStatus }}</h2>
+        <button @click="startNewGame">Start New Game</button>
+      </section>
+      <section v-else id="controls">
+        <button @click="basicAttack">ATTACK</button>
+        <button @click="specialAttack">SPECIAL ATTACK</button>
+        <button @click="heal">HEAL</button>
+        <button @click="surrender">SURRENDER</button>
       </section>
       <section id="log" class="container">
         <h2>Battle Log</h2>
-        <ul></ul>
+        <ul v-for="(log, i) in reversedBattleLog" :key="i">
+          <li>{{ log }}</li>
+        </ul>
       </section>
     </div>
   </body>

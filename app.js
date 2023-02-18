@@ -1,43 +1,72 @@
+const getRandomValue = (min, max) => {
+  return Math.floor(Math.random() * (max - min)) + min;
+};
+
 const app = Vue.createApp({
   data() {
     return {
-      isGameRunning: true,
-      monsterHealth: 100,
-      playerHealth: 100,
+      monsterMaxHealth: 100,
+      monsterHealth: null,
+      playerMaxHealth: 100,
+      playerHealth: null,
       battleLog: [],
-      turn: 1
+      round: 1,
+      specialAttackRoundCount: 0,
+      isSpecialAttackLoading: true
     }
   },
   methods: {
     basicAttack() {
-      this.monsterHealth = this.monsterHealth - 10;
-      this.turn++;
+      const damageDealt = getRandomValue(5, 12);
+      this.monsterHealth -= damageDealt;
+      this.nextTurn('basic attack', damageDealt);
     },
     specialAttack() {
-      this.monsterHealth = this.monsterHealth - 16;
-      this.turn++;
+      const damageDealt = getRandomValue(10, 25);
+      this.monsterHealth -= damageDealt;
+      this.isSpecialAttackLoading = true;
+      this.specialAttackRoundCount = -1;
+      this.nextTurn('special attack', damageDealt);
     },
     heal() {
-      (this.playerHealth >= 90)
-        ? this.playerHealth = 100
-        : this.playerHealth + 10;
-      this.turn++;
+      const healedValue = getRandomValue(5, 20);
+      this.playerHealth = (this.playerHealth >= (this.playerMaxHealth - healedValue))
+        ? 100
+        : this.playerHealth + healedValue;
+      this.nextTurn('heal', healedValue);
     },
     surrender() {
       this.playerHealth = 0;
-      this.isGameRunning = false;
     },
     monsterAttack() {
-      const damageDealt = Math.floor(Math.random(1) * 20) + 1;
-      this.playerHealth = this.playerHealth - damageDealt;
+      const damageDealt = getRandomValue(8, 15);
+      this.playerHealth -= damageDealt;
       return damageDealt;
     },
     startNewGame() {
-      this.isGameRunning = true;
-      this.monsterHealth = 100;
-      this.playerHealth = 100;
-      this.turn = 1;
+      this.monsterHealth = this.monsterMaxHealth;
+      this.playerHealth = this.playerMaxHealth;
+      this.round = 1;
       this.battleLog = [];
+    },
+    nextTurn(action, amount) {
+      this.battleLog.unshift({
+        who: 'Player',
+        action: action,
+        text: (action === 'heal') ? 'heals himself for': 'attacks and deals',
+        amount: amount
+      });
+
+      if (!this.isGameOver) {
+        this.battleLog.unshift({
+          who: 'Monster',
+          action: 'basic attack',
+          text: 'attacks and deals',
+          amount: this.monsterAttack()
+        });
+      };
+
+      this.round++;
     }
   },
   computed: {
@@ -50,20 +79,23 @@ const app = Vue.createApp({
     gameStatus() {
       return (this.monsterHealth > 0) ? 'You lost!' : 'You won!';
     },
-    reversedBattleLog() {
-      return this.battleLog.reverse();
+    isGameOver() {
+      return (this.playerHealth <= 0 || this.monsterHealth <= 0);
     }
   },
   watch: {
-    turn() {
-      if (this.turn !== 1) {
-        this.battleLog.push('Player atacks and deals 10');
-        if (this.monsterHealth > 0) {
-          this.battleLog.push(`Monster atacks and deals ${this.monsterAttack()}`);
-        }
-      }
+    round(newRound) {
+      if (newRound > 0) {
+        this.specialAttackRoundCount++;
+
+        if (this.specialAttackRoundCount >= 2) this.isSpecialAttackLoading = false;
+      };
     }
+  },
+  mounted() {
+    this.monsterHealth = this.monsterMaxHealth;
+    this.playerHealth = this.playerMaxHealth;
   }
 });
 
-app.mount('body');
+app.mount('#game');

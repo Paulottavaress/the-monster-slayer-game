@@ -29,21 +29,30 @@
           <div class="healthbar__value" :style="{width: playerHealthBar}"></div>
         </div>
       </section>
-      <section v-if="playerHealth <= 0 || monsterHealth <= 0" class="container">
+      <section v-if="isGameOver" class="container">
         <h2>Game Over!</h2>
         <h3>{{ gameStatus }}</h2>
         <button @click="startNewGame">Start New Game</button>
       </section>
-      <section v-else id="controls">
-        <button @click="basicAttack">ATTACK</button>
-        <button @click="specialAttack">SPECIAL ATTACK</button>
-        <button @click="heal">HEAL</button>
-        <button @click="surrender">SURRENDER</button>
-      </section>
+      <div v-else>
+        <section class="container" id="rounds-counter">
+          <h3>Current round: {{ round }}</h3>
+        </section>
+        <section id="controls">
+          <button @click="basicAttack">ATTACK</button>
+          <button @click="specialAttack" :disabled="isSpecialAttackLoading">SPECIAL ATTACK</button>
+          <button @click="heal">HEAL</button>
+          <button @click="surrender">SURRENDER</button>
+        </section>
+      </div>
       <section id="log" class="container">
         <h2>Battle Log</h2>
-        <ul v-for="(log, i) in reversedBattleLog" :key="i">
-          <li>{{ log }}</li>
+        <ul>
+          <li v-for="(log, i) in battleLog" :key="i">
+            <span :class="(log.who === 'Player') ? 'log--player' : 'log--monster'">{{ log.who }}</span>
+             {{ log.text }} 
+            <span :class="(log.action === 'heal') ? 'log--heal' : 'log--damage'">{{ log.amount }}</span>
+          </li>
         </ul>
       </section>
     </div>
